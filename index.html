@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杰伦歌谜挑战</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- 首页 -->
+        <section id="home-page" class="page active">
+            <div class="content-wrapper">
+                <h1 class="game-title">杰伦歌谜挑战</h1>
+                <p class="game-intro">你是真正的杰迷吗？<br>挑战100道题目，证明你的粉丝等级！</p>
+                <button id="start-btn" class="btn primary-btn">开始游戏</button>
+                <button id="rank-btn-home" class="btn secondary-btn">排行榜</button>
+            </div>
+        </section>
+
+        <!-- 答题页 -->
+        <section id="quiz-page" class="page hidden">
+            <div class="header-bar">
+                <div class="progress">题目: <span id="current-question-num">1</span>/10</div>
+                <div class="score-display">得分: <span id="current-score">0</span></div>
+                <button id="quit-btn" class="icon-btn">×</button>
+            </div>
+
+            <div class="timer-bar">
+                <div id="timer-fill" class="timer-fill"></div>
+            </div>
+            <div class="timer-text">剩余时间: <span id="time-left">10</span>s</div>
+
+            <div class="question-container">
+                <div id="media-area" class="media-area hidden">
+                    <!-- 图片或音频播放器将在这里渲染 -->
+                </div>
+                <h2 id="question-text" class="question-text">题目加载中...</h2>
+            </div>
+
+            <div id="options-container" class="options-container">
+                <!-- 选项将在这里渲染 -->
+            </div>
+        </section>
+
+        <!-- 解析页 -->
+        <section id="explanation-page" class="page hidden">
+            <div class="result-icon" id="result-icon">✅</div>
+            <h2 id="result-title">回答正确!</h2>
+
+            <div class="explanation-box">
+                <h3>正确答案: <span id="correct-answer-text"></span></h3>
+                <p id="explanation-text">解析内容...</p>
+            </div>
+
+            <div class="next-timer">
+                <span id="next-countdown">5</span>秒后自动跳转下一题
+            </div>
+            <button id="next-btn" class="btn primary-btn">立即跳转</button>
+        </section>
+
+        <!-- 结果页 -->
+        <section id="result-page" class="page hidden">
+            <div class="content-wrapper">
+                <h2>挑战结束</h2>
+                <div class="final-score">总分: <span id="final-score-num">0</span></div>
+
+                <div class="fan-level-box">
+                    <p>你的粉丝等级</p>
+                    <h1 id="fan-level-title">钻粉</h1>
+                    <p id="fan-level-desc">无与伦比！你就是周杰伦本人吧？</p>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="nickname-input" placeholder="输入你的昵称" maxlength="10">
+                </div>
+
+                <button id="submit-score-btn" class="btn primary-btn">提交成绩并查看排行</button>
+                <button id="restart-btn" class="btn secondary-btn">再玩一次</button>
+            </div>
+        </section>
+
+        <!-- 排行榜页 -->
+        <section id="leaderboard-page" class="page hidden">
+            <div class="header-bar">
+                <h2>排行榜</h2>
+                <button id="back-home-btn" class="icon-btn">🏠</button>
+            </div>
+
+            <div class="leaderboard-list" id="leaderboard-list">
+                <!-- 排行榜列表 -->
+            </div>
+        </section>
+    </div>
+
+    <!-- 音频播放器 (隐藏) -->
+    <audio id="bgm-player" preload="auto"></audio>
+    <audio id="sfx-player" preload="auto"></audio>
+
+    <script src="questions.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>

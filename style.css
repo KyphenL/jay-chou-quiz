@@ -1,0 +1,453 @@
+:root {
+    --primary-color: #ff007f;
+    /* Jay Pink */
+    --secondary-color: #00e5ff;
+    /* Jay Blue */
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #ffffff;
+    --text-secondary: #aaaaaa;
+    --correct-color: #4caf50;
+    --wrong-color: #f44336;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Noto Sans SC', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    /* Prevent scroll on mobile */
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px;
+    /* Mobile first constraint */
+    height: 100vh;
+    background-color: var(--bg-color);
+    position: relative;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Page Transitions */
+.page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    background-color: var(--bg-color);
+}
+
+.page.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+    z-index: 0;
+}
+
+.page.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+    z-index: 1;
+}
+
+/* Common Styles */
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.btn {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.primary-btn {
+    background: linear-gradient(45deg, var(--primary-color), #ff5252);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 0, 127, 0.4);
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 2px solid var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Home Page */
+.game-title {
+    font-size: 48px;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.2;
+}
+
+.game-intro {
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+/* Quiz Page */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.timer-bar {
+    width: 100%;
+    height: 6px;
+    background-color: #333;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    overflow: hidden;
+}
+
+.timer-fill {
+    height: 100%;
+    background-color: var(--secondary-color);
+    width: 100%;
+    transition: width 1s linear;
+}
+
+.timer-text {
+    text-align: right;
+    font-size: 12px;
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+}
+
+.question-container {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.difficulty-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.difficulty-badge.easy {
+    background-color: #4caf50;
+    color: white;
+}
+
+.difficulty-badge.medium {
+    background-color: #ff9800;
+    color: white;
+}
+
+.difficulty-badge.hard {
+    background-color: #f44336;
+    color: white;
+}
+
+
+.media-area {
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    max-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+    padding: 10px;
+}
+
+.media-area img {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+}
+
+.audio-control {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    color: #000;
+    cursor: pointer;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 229, 255, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+    }
+}
+
+.question-text {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.option-btn {
+    background-color: var(--card-bg);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+    border: 1px solid #333;
+    color: var(--text-color);
+    transition: all 0.2s;
+}
+
+.option-btn:hover {
+    border-color: var(--secondary-color);
+    background-color: #2a2a2a;
+}
+
+.option-btn.selected {
+    border-color: var(--secondary-color);
+    background-color: rgba(0, 229, 255, 0.1);
+}
+
+.option-btn.correct {
+    border-color: var(--correct-color);
+    background-color: rgba(76, 175, 80, 0.2);
+}
+
+.option-btn.wrong {
+    border-color: var(--wrong-color);
+    background-color: rgba(244, 67, 54, 0.2);
+}
+
+/* Explanation Page */
+#explanation-page {
+    text-align: center;
+    justify-content: center;
+}
+
+.result-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+}
+
+.explanation-box {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 30px 0;
+    text-align: left;
+}
+
+.explanation-box h3 {
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.explanation-box p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.next-timer {
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Result Page */
+.final-score {
+    font-size: 24px;
+    margin-bottom: 30px;
+}
+
+.final-score span {
+    font-size: 48px;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.fan-level-box {
+    margin-bottom: 40px;
+}
+
+#fan-level-title {
+    font-size: 36px;
+    color: var(--secondary-color);
+    margin: 10px 0;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+}
+
+.input-group {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px;
+    border-radius: 30px;
+    border: 2px solid #333;
+    background-color: var(--card-bg);
+    color: white;
+    text-align: center;
+    font-size: 16px;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Leaderboard Page */
+.leaderboard-list {
+    flex: 1;
+    overflow-y: auto;
+    background-color: var(--card-bg);
+    border-radius: 15px;
+    padding: 10px;
+}
+
+.rank-header {
+    display: flex;
+    padding: 15px;
+    background-color: #333;
+    color: var(--primary-color);
+    font-weight: bold;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.rank-header .rank-num {
+    width: 30px;
+}
+
+.rank-header .rank-name {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.rank-header .rank-level {
+    width: 60px;
+    text-align: center;
+}
+
+.rank-header .rank-score {
+    width: 80px;
+    text-align: right;
+}
+
+.rank-header .rank-date {
+    width: 140px;
+    text-align: right;
+}
+
+.rank-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #333;
+}
+
+.rank-item:last-child {
+    border-bottom: none;
+}
+
+.rank-item .rank-num {
+    width: 30px;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.rank-item .rank-name {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.rank-item .rank-level {
+    width: 60px;
+    text-align: center;
+    font-weight: bold;
+    color: #ff9800;
+    font-size: 14px;
+}
+
+.rank-item .rank-score {
+    font-weight: bold;
+    color: var(--primary-color);
+    width: 80px;
+    text-align: right;
+}
+
+.rank-item .rank-date {
+    color: #666;
+    width: 140px;
+    text-align: right;
+    font-size: 14px;
+}
