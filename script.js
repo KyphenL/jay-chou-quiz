@@ -700,14 +700,13 @@ async function renderLeaderboard() {
 
     // Display only top 10 entries
     leaderboard.slice(0, 10).forEach((item, index) => {
-        // Format date to readable format
-        const formattedDate = new Date(item.date).toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        // Format date to readable format (Month-Day Hour:Minute)
+        const dateObj = new Date(item.date);
+        const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+        const day = dateObj.getDate().toString().padStart(2, '0');
+        const hour = dateObj.getHours().toString().padStart(2, '0');
+        const minute = dateObj.getMinutes().toString().padStart(2, '0');
+        const formattedDate = `${month}-${day} ${hour}:${minute}`;
         
         const div = document.createElement('div');
         div.className = 'rank-item';
