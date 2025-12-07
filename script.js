@@ -364,14 +364,6 @@ function playAudio(src, btn) {
     };
     
     btn.innerHTML = '⏸';
-    
-    // 设置5秒后自动暂停
-    audioTimer = setTimeout(() => {
-        if (audioPlayer) {
-            audioPlayer.pause();
-            btn.innerHTML = '▶';
-        }
-    }, 5000);
 }
 
 function toggleAudio(src, btn) {
@@ -379,13 +371,8 @@ function toggleAudio(src, btn) {
         // 如果正在播放，暂停
         audioPlayer.pause();
         btn.innerHTML = '▶';
-        // 清除自动暂停定时器
-        if (audioTimer) {
-            clearTimeout(audioTimer);
-            audioTimer = null;
-        }
     } else {
-        // 如果已暂停或未播放，重新播放前5秒
+        // 如果已暂停或未播放，重新播放
         playAudio(src, btn);
     }
 }
