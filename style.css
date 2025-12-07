@@ -602,13 +602,16 @@ body {
 }
 
 .rank-header .rank-num {
-    width: 30px;
+    width: 40px;
 }
 
 .rank-header .rank-name {
-    flex: 1;
+    flex: 2; /* 增加名字列的权重 */
     text-align: left;
     padding-left: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .rank-header .rank-level {
@@ -617,12 +620,12 @@ body {
 }
 
 .rank-header .rank-score {
-    width: 80px;
+    width: 60px;
     text-align: right;
 }
 
 .rank-header .rank-date {
-    width: 140px;
+    width: 90px;
     text-align: right;
 }
 
@@ -631,6 +634,7 @@ body {
     justify-content: space-between;
     padding: 15px;
     border-bottom: 1px solid #333;
+    align-items: center;
 }
 
 .rank-item:last-child {
@@ -638,15 +642,18 @@ body {
 }
 
 .rank-item .rank-num {
-    width: 30px;
+    width: 40px;
     font-weight: bold;
     color: var(--secondary-color);
 }
 
 .rank-item .rank-name {
-    flex: 1;
+    flex: 2; /* 增加名字列的权重 */
     text-align: left;
     padding-left: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .rank-item .rank-level {
@@ -660,13 +667,13 @@ body {
 .rank-item .rank-score {
     font-weight: bold;
     color: var(--primary-color);
-    width: 80px;
+    width: 60px;
     text-align: right;
 }
 
 .rank-item .rank-date {
     color: #666;
-    width: 140px;
+    width: 90px;
     text-align: right;
-    font-size: 14px;
+    font-size: 12px;
 }

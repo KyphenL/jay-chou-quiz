@@ -715,7 +715,7 @@ async function renderLeaderboard() {
             <span class="rank-num">${index + 1}</span>
             <span class="rank-name">${item.name}</span>
             <span class="rank-level">${item.level}</span>
-            <span class="rank-score">${item.score}分</span>
+            <span class="rank-score">${item.score}</span>
             <span class="rank-date">${formattedDate}</span>
         `;
         listEl.appendChild(div);

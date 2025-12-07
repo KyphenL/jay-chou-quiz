@@ -593,7 +593,7 @@ const questionBank = [
         options: ["轨迹", "断了的弦", "晴天", "退后"],
         answer: 0,
         explanation: "这是《轨迹》的前奏。",
-        media: "songs/寻找周杰伦EP/周杰伦 - 軌跡.mp3"
+        media: "songs/寻找周杰伦EP/周杰倫 - 軌跡.mp3"
     },
     {
         id: 53,
