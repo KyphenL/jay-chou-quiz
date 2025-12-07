@@ -1117,7 +1117,7 @@ const questionBank = [
         question: "“哥练的胸肌如果你还想靠”这句话出自哪首歌？",
         options: ["不爱我就拉倒", "霍元甲", "龙拳", "双截棍"],
         answer: 0,
-        explanation: "这句歌词出自《本草纲目》。",
+        explanation: "这句歌词出自《不爱我就拉倒》。",
         media: null
     },
     {

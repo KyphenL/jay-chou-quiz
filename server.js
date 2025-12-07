@@ -64,9 +64,13 @@ app.post('/api/leaderboard', (req, res) => {
 app.use(express.static(__dirname));
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
 
 // Initialize with empty leaderboard
 leaderboard = [];
