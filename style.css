@@ -681,32 +681,48 @@ body {
 /* Leaderboard Mobile Optimization */
 @media screen and (max-width: 600px) {
     .rank-header, .rank-item {
-        padding: 10px 5px;
-        font-size: 14px;
+        padding: 10px 2px; /* 进一步减小内边距 */
+        font-size: 13px; /* 整体字体稍微调小一点点 */
     }
 
     .rank-header .rank-num, .rank-item .rank-num {
-        width: 30px;
-        min-width: 30px;
+        width: 25px;
+        min-width: 25px;
+        font-size: 13px;
     }
 
     .rank-header .rank-name, .rank-item .rank-name {
         flex: 1;
         padding-left: 5px;
+        font-size: 13px;
     }
 
+    /* 恢复显示粉级 */
     .rank-header .rank-level, .rank-item .rank-level {
-        display: none; /* Hide level on mobile to save space */
+        display: block;
+        width: 36px;
+        min-width: 36px;
+        font-size: 12px;
+        padding: 0 2px;
     }
 
     .rank-header .rank-score, .rank-item .rank-score {
-        width: 40px;
-        min-width: 40px;
+        width: 35px;
+        min-width: 35px;
+        font-size: 13px;
     }
 
-    .rank-header .rank-date, .rank-item .rank-date {
-        width: 75px;
-        min-width: 75px;
-        font-size: 11px;
+    /* 标题日期字体保持正常 */
+    .rank-header .rank-date {
+        width: 70px;
+        min-width: 70px;
+        font-size: 13px; 
+    }
+
+    /* 内容日期字体调小 */
+    .rank-item .rank-date {
+        width: 70px;
+        min-width: 70px;
+        font-size: 10px;
     }
 }
