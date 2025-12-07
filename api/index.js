@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { kv } = require('@vercel/kv');
+const { createClient } = require('redis');
 
 const app = express();
 const PORT = 3000;
@@ -11,29 +11,78 @@ app.use(cors());
 // Parse JSON request bodies
 app.use(express.json());
 
-// In-memory fallback (only used if KV is not configured)
+// Initialize Redis Client
+let redisClient;
+
+async function getRedisClient() {
+    if (redisClient && redisClient.isOpen) {
+        return redisClient;
+    }
+
+    if (process.env.REDIS_URL || process.env.KV_URL) {
+        try {
+            const url = process.env.REDIS_URL || process.env.KV_URL;
+            const connectionOptions = {
+                url: url
+            };
+
+            // Only add TLS options if the URL starts with rediss:// (secure Redis)
+            // or if we are in a known cloud environment that needs it.
+            // Vercel Redis/Upstash URLs usually start with rediss:// which node-redis handles automatically.
+            // However, explicit TLS options can sometimes cause issues if the certs aren't standard.
+            // Let's trust node-redis to parse the 'rediss://' protocol for TLS.
+            if (url.startsWith('rediss://')) {
+                connectionOptions.socket = {
+                    tls: true,
+                    rejectUnauthorized: false // Often needed for serverless Redis
+                };
+            }
+
+            redisClient = createClient(connectionOptions);
+
+            redisClient.on('error', (err) => console.error('Redis Client Error', err));
+            
+            await redisClient.connect();
+            console.log('Redis connected successfully');
+            return redisClient;
+        } catch (error) {
+            console.error('Failed to connect to Redis:', error);
+            return null;
+        }
+    }
+    return null;
+}
+
+// In-memory fallback (only used if Redis is not configured)
 let localLeaderboard = [];
 
 // API endpoint to get top 10 leaderboard
 app.get('/api/leaderboard', async (req, res) => {
     try {
-        // Check if Vercel KV is configured
-        if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+        const redis = await getRedisClient();
+        
+        // Check if Redis is configured and connected
+        if (redis) {
             // Get top 100 scores in descending order
-            // zrange returns an array of members (strings)
-            const result = await kv.zrange('leaderboard', 0, 99, { rev: true });
+            // zRange returns an array of members (strings) in node-redis v4+
+            // zRange(key, start, stop, options)
+            const result = await redis.zRange('leaderboard', 0, 99, { REV: true });
             
             // Parse the JSON strings back to objects
             const leaderboard = result.map(item => {
                 if (typeof item === 'string') {
-                    return JSON.parse(item);
+                    try {
+                        return JSON.parse(item);
+                    } catch (e) {
+                        return { name: "Unknown", score: 0, level: "N/A" };
+                    }
                 }
                 return item;
             });
             
             return res.json(leaderboard);
         } else {
-            console.warn('Vercel KV not configured, using in-memory fallback');
+            console.warn('Redis not configured or disconnected, using in-memory fallback');
             const sortedLeaderboard = [...localLeaderboard].sort((a, b) => b.score - a.score);
             return res.json(sortedLeaderboard.slice(0, 100));
         }
@@ -79,40 +128,25 @@ app.post('/api/leaderboard', async (req, res) => {
     };
     
     try {
-        if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-            // Add to Vercel KV
-            // Member is the JSON string of the entry
-            // Score is the actual game score for sorting
-            // We use a unique ID in the member string to ensure uniqueness, 
-            // but for zadd, the member must be unique. 
-            // If we just use JSON.stringify(newEntry), duplicate names/scores might overwrite if the ID was somehow same (unlikely with Date.now()).
-            // However, Redis ZSETs are unique by member.
-            
-            await kv.zadd('leaderboard', { score: score, member: JSON.stringify(newEntry) });
+        const redis = await getRedisClient();
+        
+        if (redis) {
+            // Add to Redis
+            // zAdd(key, { score: number, value: string })
+            await redis.zAdd('leaderboard', { score: score, value: JSON.stringify(newEntry) });
             
             // Limit leaderboard size to top 100 to save space
-            // Redis ZREMRANGEBYRANK removes items by rank (0-based).
-            // ZRANGE is sorted low to high by default.
-            // We want to KEEP the highest scores (which are at the END of the standard sort).
-            // So, ranks 0 to -101 are the lowest scores that we want to remove.
-            // Wait, kv.zadd uses score.
-            // Let's just keep top 100.
-            // Since we retrieve with { rev: true } (highest first), 
-            // the "lowest" scores are at index 0 in a standard sort.
-            // We want to remove the lowest scores if total count > 100.
-            
-            const count = await kv.zcard('leaderboard');
+            const count = await redis.zCard('leaderboard');
             if (count > 100) {
-                // Remove the lowest scoring members (which are at rank 0 to count-101)
-                // ZREMRANGEBYRANK key start stop
-                // We want to keep 100, so we remove from 0 to (count - 100 - 1)
-                await kv.zremrangebyrank('leaderboard', 0, count - 101);
+                // Remove the lowest scoring members
+                // zRemRangeByRank(key, start, stop)
+                await redis.zRemRangeByRank('leaderboard', 0, count - 101);
             }
         } else {
             localLeaderboard.push(newEntry);
         }
         
-        res.status(201).json({ message: 'Score submitted successfully', entry: newEntry });
+        return res.status(201).json({ message: 'Score submitted successfully', entry: newEntry });
     } catch (error) {
         console.error('Error submitting score:', error);
         // Fallback to local
