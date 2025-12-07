@@ -31,13 +31,182 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 480px;
-    /* Mobile first constraint */
     height: 100vh;
     background-color: var(--bg-color);
     position: relative;
     overflow-y: auto;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Mobile devices (default - vertical layout) */
+@media (max-width: 767px) {
+    .app-container {
+        max-width: 480px;
+    }
+}
+
+/* Desktop devices (horizontal layout) */
+    @media (min-width: 768px) {
+        .app-container {
+            max-width: 900px;
+            max-height: 600px;
+            aspect-ratio: 16/9;
+            border-radius: 10px;
+        }
+    
+    /* Home Page */
+    .game-title {
+        font-size: 64px;
+    }
+    
+    .game-intro {
+        font-size: 20px;
+    }
+    
+    .btn {
+        width: 300px;
+        font-size: 20px;
+        padding: 20px;
+    }
+    
+    /* Quiz Page */
+    .header-bar {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+    
+    .timer-text {
+        font-size: 16px;
+        margin-bottom: 30px;
+    }
+    
+    .question-container {
+        margin-bottom: 40px;
+        text-align: center;
+    }
+    
+    .media-area {
+        max-height: 250px;
+        margin-bottom: 20px;
+    }
+    
+    .media-area img {
+        max-height: 250px;
+    }
+    
+    .question-text {
+        font-size: 28px;
+        max-width: 80%;
+        margin: 0 auto;
+    }
+    
+    .option-btn {
+        width: auto;
+        min-width: 200px;
+        font-size: 20px;
+        padding: 20px;
+        writing-mode: horizontal-tb;
+        text-orientation: mixed;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .options-container {
+        max-width: 80%;
+        margin: 0 auto;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    /* 桌面端图片题选项布局 */
+    .options-container.image-question-options {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+    }
+    
+    .options-container.image-question-options .option-btn {
+        width: calc(50% - 15px); /* 减去gap的一半，确保两行排列 */
+        min-width: 150px;
+        max-width: none;
+    }
+    
+    /* Explanation Page */
+    .result-icon {
+        font-size: 80px;
+    }
+    
+    #result-title {
+        font-size: 36px;
+    }
+    
+    .explanation-box {
+        max-width: 80%;
+        margin: 40px auto;
+        padding: 30px;
+        font-size: 18px;
+    }
+    
+    .explanation-box h3 {
+        font-size: 20px;
+    }
+    
+    .next-timer {
+        font-size: 18px;
+    }
+    
+    /* Result Page */
+    .final-score {
+        font-size: 32px;
+    }
+    
+    .final-score span {
+        font-size: 64px;
+    }
+    
+    #fan-level-title {
+        font-size: 48px;
+    }
+    
+    .input-group input {
+        width: 300px;
+        padding: 20px;
+        font-size: 18px;
+    }
+    
+    /* Leaderboard Page */
+    .leaderboard-list {
+        padding: 20px;
+    }
+    
+    .rank-header,
+    .rank-item {
+        padding: 20px;
+        font-size: 16px;
+    }
+    
+    .rank-header .rank-num,
+    .rank-item .rank-num {
+        width: 50px;
+    }
+    
+    .rank-header .rank-level,
+    .rank-item .rank-level {
+        width: 80px;
+    }
+    
+    .rank-header .rank-score,
+    .rank-item .rank-score {
+        width: 100px;
+    }
+    
+    .rank-header .rank-date,
+    .rank-item .rank-date {
+        width: 160px;
+    }
 }
 
 /* Page Transitions */
@@ -148,6 +317,7 @@ body {
     border-radius: 3px;
     margin-bottom: 5px;
     overflow: hidden;
+    display: block; /* 确保倒计时进度条始终可见 */
 }
 
 .timer-fill {
@@ -199,7 +369,7 @@ body {
     margin-bottom: 20px;
     border-radius: 10px;
     overflow: hidden;
-    max-height: 300px;
+    max-height: 250px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -209,7 +379,7 @@ body {
 
 .media-area img {
     max-width: 100%;
-    max-height: 300px;
+    max-height: 250px;
     object-fit: contain;
 }
 
@@ -244,23 +414,51 @@ body {
 .question-text {
     font-size: 20px;
     line-height: 1.4;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 80%;
+    max-width: 600px;
 }
 
 .options-container {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 15px;
+}
+
+/* 图片题选项布局 - 每行显示两个选项 */
+.options-container.image-question-options {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+}
+
+.options-container.image-question-options .option-btn {
+    width: calc(50% - 10px); /* 减去gap的一半，确保两行排列 */
+    min-width: 150px;
+    max-width: none;
 }
 
 .option-btn {
     background-color: var(--card-bg);
     padding: 15px;
     border-radius: 10px;
-    text-align: left;
+    text-align: center;
     cursor: pointer;
     border: 1px solid #333;
     color: var(--text-color);
     transition: all 0.2s;
+    width: auto;
+    min-width: 200px;
+    max-width: 90%;
+    margin: 0 auto;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    white-space: normal;
+    overflow: visible;
 }
 
 .option-btn:hover {
@@ -371,6 +569,27 @@ body {
     background-color: var(--card-bg);
     border-radius: 15px;
     padding: 10px;
+}
+
+.user-rank-display {
+    background: linear-gradient(45deg, var(--primary-color), #ff5252);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+.user-rank-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-rank-content p {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.9;
 }
 
 .rank-header {

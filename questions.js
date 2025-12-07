@@ -1115,7 +1115,7 @@ const questionBank = [
         type: 'text',
         difficulty: 'easy',
         question: "“哥练的胸肌如果你还想靠”这句话出自哪首歌？",
-        options: ["本草纲目", "霍元甲", "龙拳", "双截棍"],
+        options: ["不爱我就拉倒", "霍元甲", "龙拳", "双截棍"],
         answer: 0,
         explanation: "这句歌词出自《本草纲目》。",
         media: null
@@ -1448,6 +1448,36 @@ const questionBank = [
         options: ["投篮", "扣篮", "运球", "传球"],
         answer: 2,
         explanation: "在《大灌篮》中，周杰伦饰演的方世杰擅长运球和突破。",
+        media: null
+    },
+    {
+        id: 201,
+        type: 'text',
+        difficulty: 'easy',
+        question: "周杰伦2025年12月5日发布的新单曲名称是什么？",
+        options: ["恒星不忘Forever Forever", "永远永远Forever Forever", "星辰大海Forever Forever", "星空之下"],
+        answer: 0,
+        explanation: "周杰伦在2025年12月5日发布了新单曲《恒星不忘 Forever Forever》。",
+        media: null
+    },
+    {
+        id: 202,
+        type: 'text',
+        difficulty: 'medium',
+        question: "单曲《恒星不忘 Forever Forever》是哪个组合演唱的？",
+        options: ["周杰伦和张惠妹", "周杰伦和F4", "周杰伦和五月天", "新五月天"],
+        answer: 3,
+        explanation: "《恒星不忘 Forever Forever》是周杰伦、言承旭 、吴建豪 、周渝民 、五月天阿信合作演唱。",
+        media: null
+    },
+    {
+        id: 203,
+        type: 'text',
+        difficulty: 'hard',
+        question: "《恒星不忘 Forever Forever》是哪天发布的？",
+        options: ["2025年12月1日", "2025年12月3日", "2025年12月5日", "2025年12月7日"],
+        answer: 2,
+        explanation: "2025年12月5日，周杰伦、言承旭 、吴建豪 、周渝民 、五月天阿信史诗合作全新单曲《恒星不忘 Forever Forever》重磅上线！",
         media: null
     },
 

@@ -116,7 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupEventListeners() {
     document.getElementById('start-btn').addEventListener('click', startGame);
-    document.getElementById('rank-btn-home').addEventListener('click', () => showPage('leaderboard'));
+    document.getElementById('rank-btn-home').addEventListener('click', () => {
+    // Clear current user score info when accessing leaderboard from home
+    currentUserScoreInfo = null;
+    showPage('leaderboard');
+});
     document.getElementById('quit-btn').addEventListener('click', confirmQuit);
     document.getElementById('next-btn').addEventListener('click', nextQuestion);
     document.getElementById('submit-score-btn').addEventListener('click', submitScore);
@@ -187,43 +191,22 @@ function getRandomQuestions(count) {
     // 按类型分配题目
     Object.entries(typeDistribution).forEach(([type, typeCount]) => {
         // 获取该类型的所有题目
-        const typeQuestions = questionBank.filter(q => q.type === type && !usedIds.has(q.id));
+        let typeQuestions = questionBank.filter(q => q.type === type && !usedIds.has(q.id));
         
         // 如果该类型题目不足，尽可能选择所有可用的
         const actualTypeCount = Math.min(typeCount, typeQuestions.length);
         
-        // 按难度比例从该类型中选择题目
-        const difficultyCounts = {
-            'easy': Math.round(actualTypeCount * difficultyDistribution.easy),
-            'medium': Math.round(actualTypeCount * difficultyDistribution.medium),
-            'hard': Math.round(actualTypeCount * difficultyDistribution.hard)
-        };
-        
-        // 调整总数，确保加起来等于actualTypeCount
-        const totalDifficultyCount = Object.values(difficultyCounts).reduce((sum, val) => sum + val, 0);
-        const difference = actualTypeCount - totalDifficultyCount;
-        if (difference > 0) {
-            // 如果有剩余名额，优先分配给简单题
-            difficultyCounts.easy += difference;
-        }
-        
-        // 从各难度中选择题目
-        Object.entries(difficultyCounts).forEach(([difficulty, diffCount]) => {
-            if (diffCount <= 0) return;
+        // 文本题、音乐题和图片题都采用相同的等概率抽取方式
+        if (actualTypeCount > 0) {
+            // 直接从所有该类型题目中随机选择所需数量
+            const shuffled = [...typeQuestions].sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, actualTypeCount);
             
-            // 获取该类型和难度的题目
-            const questions = typeQuestions.filter(q => q.difficulty === difficulty);
-            
-            // 随机打乱并选择所需数量
-            const shuffled = [...questions].sort(() => 0.5 - Math.random());
-            const selected = shuffled.slice(0, diffCount);
-            
-            // 添加到结果数组并标记已使用的ID
             selected.forEach(q => {
                 selectedQuestions.push(q);
                 usedIds.add(q.id);
             });
-        });
+        }
     });
     
     // 如果题目总数不足10题，从剩余题目中随机补充
@@ -263,6 +246,9 @@ function loadQuestion() {
     // Handle Media
     if (q.type === 'image' && q.media) {
         mediaAreaEl.classList.remove('hidden');
+        // 为图片题添加特殊类名，用于应用不同的选项布局
+        optionsContainerEl.classList.add('image-question-options');
+        
         const img = document.createElement('img');
         
         // 设置图片样式，确保更好的显示效果
@@ -360,24 +346,42 @@ function loadQuestion() {
                 }
             }, 5000);
         }
-    } else if (q.type === 'audio' && q.media) {
-        mediaAreaEl.classList.remove('hidden');
-        const playBtn = document.createElement('div');
-        playBtn.className = 'audio-control';
-        playBtn.innerHTML = '▶';
-        playBtn.onclick = () => toggleAudio(q.media, playBtn);
-        mediaAreaEl.appendChild(playBtn);
+    } else {
+        // 非图片题移除特殊类名
+        optionsContainerEl.classList.remove('image-question-options');
+        
+        if (q.type === 'audio' && q.media) {
+            mediaAreaEl.classList.remove('hidden');
+            const playBtn = document.createElement('div');
+            playBtn.className = 'audio-control';
+            playBtn.innerHTML = '▶';
+            playBtn.onclick = () => toggleAudio(q.media, playBtn);
+            mediaAreaEl.appendChild(playBtn);
 
-        // Auto play audio
-        playAudio(q.media, playBtn);
+            // Auto play audio
+            playAudio(q.media, playBtn);
+        }
     }
 
-    // Render Options
-    q.options.forEach((opt, index) => {
+    // Render Options - 将包含"选项都是"的选项放在最后
+    // 创建选项副本以便重新排序
+    const sortedOptions = [...q.options];
+    const allOptionsIndex = sortedOptions.findIndex(opt => opt.includes('选项都是'));
+    
+    // 如果找到"选项都是"的选项，则将其移到数组末尾
+    if (allOptionsIndex !== -1) {
+        const allOptions = sortedOptions.splice(allOptionsIndex, 1)[0];
+        sortedOptions.push(allOptions);
+    }
+    
+    // 渲染排序后的选项
+    sortedOptions.forEach((opt, index) => {
+        // 找到原始索引，因为handleAnswer需要知道原始的选项索引
+        const originalIndex = q.options.indexOf(opt);
         const btn = document.createElement('div');
         btn.className = 'option-btn';
         btn.textContent = opt;
-        btn.onclick = () => handleAnswer(index, btn);
+        btn.onclick = () => handleAnswer(originalIndex, btn);
         optionsContainerEl.appendChild(btn);
     });
 
@@ -682,6 +686,9 @@ function calculateFanLevel(score) {
     }
 }
 
+// Track current user's score information for ranking display
+let currentUserScoreInfo = null;
+
 async function submitScore() {
     const nickname = nicknameInputEl.value.trim();
     if (!nickname) {
@@ -691,6 +698,13 @@ async function submitScore() {
 
     // Calculate fan level for new score
     const level = calculateFanLevel(score);
+    
+    // Store current user's score information
+    currentUserScoreInfo = {
+        name: nickname,
+        score: score,
+        level: level
+    };
     
     // Try to submit score to Firebase first
     if (database) {
@@ -734,7 +748,7 @@ async function renderLeaderboard() {
     const listEl = document.getElementById('leaderboard-list');
     
     // Show loading state
-    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">加载排行榜数据中...</div>';
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">加载前10名排名榜数据中...</div>';
     
     let leaderboard = [];
     let isFirebase = false;
@@ -754,6 +768,38 @@ async function renderLeaderboard() {
     }
 
     listEl.innerHTML = '';
+
+    // Check if we need to show user's rank (only when coming from result page)
+    let userRank = -1;
+    if (currentUserScoreInfo) {
+        // Calculate user's rank across all players
+        userRank = leaderboard.findIndex(entry => 
+            entry.name === currentUserScoreInfo.name && 
+            entry.score === currentUserScoreInfo.score
+        ) + 1;
+        
+        // If not found, calculate based on score
+        if (userRank === 0) {
+            // Create a temporary entry for ranking calculation
+            const tempLeaderboard = [...leaderboard, currentUserScoreInfo];
+            tempLeaderboard.sort((a, b) => b.score - a.score);
+            userRank = tempLeaderboard.findIndex(entry => 
+                entry.name === currentUserScoreInfo.name && 
+                entry.score === currentUserScoreInfo.score
+            ) + 1;
+        }
+        
+        // Add user rank display at the top
+        const userRankEl = document.createElement('div');
+        userRankEl.className = 'user-rank-display';
+        userRankEl.innerHTML = `
+            <div class="user-rank-content">
+                <h3>你的排名为第${userRank}名</h3>
+                <p>得分: ${currentUserScoreInfo.score}分 | 等级: ${currentUserScoreInfo.level}</p>
+            </div>
+        `;
+        listEl.appendChild(userRankEl);
+    }
 
     // Add table header
     const headerEl = document.createElement('div');
@@ -777,8 +823,8 @@ async function renderLeaderboard() {
         return;
     }
 
-    // Display all entries
-    leaderboard.forEach((item, index) => {
+    // Display only top 10 entries
+    leaderboard.slice(0, 10).forEach((item, index) => {
         // Format date to readable format
         const formattedDate = new Date(item.date).toLocaleString('zh-CN', {
             year: 'numeric',
