@@ -6,9 +6,6 @@ let timerInterval;
 let timeLeft = 10;
 let isAnswered = false;
 let audioPlayer = null;
-// 图片缓存对象，用于存储已预加载的图片
-let imageCache = {};
-let preloadComplete = false;
 
 // DOM Elements
 const pages = {
@@ -44,69 +41,8 @@ const nicknameInputEl = document.getElementById('nickname-input');
 // Audio
 const bgmPlayer = document.getElementById('bgm-player');
 
-// 预加载所有图片
-function preloadImages() {
-    let loadedCount = 0;
-    const imageQuestions = questionBank.filter(q => q.type === 'image' && q.media);
-    
-    if (imageQuestions.length === 0) {
-        preloadComplete = true;
-        return;
-    }
-    
-    // 创建加载指示器
-    const loadingIndicatorEl = document.createElement('div');
-    loadingIndicatorEl.id = 'loading-indicator';
-    loadingIndicatorEl.textContent = '加载资源中...';
-    loadingIndicatorEl.style.position = 'fixed';
-    loadingIndicatorEl.style.top = '50%';
-    loadingIndicatorEl.style.left = '50%';
-    loadingIndicatorEl.style.transform = 'translate(-50%, -50%)';
-    loadingIndicatorEl.style.fontSize = '18px';
-    loadingIndicatorEl.style.zIndex = '1000';
-    document.body.appendChild(loadingIndicatorEl);
-    
-    imageQuestions.forEach(q => {
-        const img = new Image();
-        img.onload = () => {
-            // 图片加载成功，存入缓存
-            imageCache[q.media] = img;
-            loadedCount++;
-            
-            // 更新加载进度
-            loadingIndicatorEl.textContent = `加载资源中... ${loadedCount}/${imageQuestions.length}`;
-            
-            if (loadedCount === imageQuestions.length) {
-                preloadComplete = true;
-                // 隐藏加载指示器
-                loadingIndicatorEl.style.display = 'none';
-                console.log('所有图片预加载完成');
-            }
-        };
-        
-        img.onerror = () => {
-            console.error(`图片加载失败: ${q.media}`);
-            loadedCount++;
-            
-            // 即使加载失败也继续
-            loadingIndicatorEl.textContent = `加载资源中... ${loadedCount}/${imageQuestions.length}`;
-            
-            if (loadedCount === imageQuestions.length) {
-                preloadComplete = true;
-                loadingIndicatorEl.style.display = 'none';
-            }
-        };
-        
-        // 开始加载图片
-        img.src = q.media;
-    });
-}
-
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
-    // 页面加载完成后预加载图片
-    preloadImages();
-    
     // 确保设置事件监听器和加载排行榜
     setupEventListeners();
     // Initialize global leaderboard
@@ -309,9 +245,6 @@ function loadQuestion() {
                 errorIndicator.style.display = 'none';
                 loadingIndicator.style.display = 'block';
                 
-                // 清除缓存中的失败图片
-                delete imageCache[q.media];
-                
                 // 重新加载图片
                 img.src = '';
                 setTimeout(() => {
@@ -323,29 +256,16 @@ function loadQuestion() {
         // 设置加载超时
         let loadTimeout;
         
-        // 设置图片源
-        if (imageCache[q.media] && imageCache[q.media].complete) {
-            img.src = imageCache[q.media].src;
-        } else {
-            // 如果缓存中没有或未完成加载，则直接设置src
-            // 同时更新缓存
-            const cachedImg = imageCache[q.media] || new Image();
-            cachedImg.onload = img.onload;
-            cachedImg.onerror = img.onerror;
-            cachedImg.src = q.media;
-            imageCache[q.media] = cachedImg;
-            
-            // 设置图片源并添加超时处理
-            img.src = q.media;
-            
-            // 5秒后如果图片仍未加载完成，则触发错误处理
-            loadTimeout = setTimeout(() => {
-                if (!img.complete) {
-                    console.warn('图片加载超时:', q.media);
-                    img.onerror(); // 触发错误处理
-                }
-            }, 5000);
-        }
+        // 设置图片源并添加超时处理
+        img.src = q.media;
+        
+        // 5秒后如果图片仍未加载完成，则触发错误处理
+        loadTimeout = setTimeout(() => {
+            if (!img.complete) {
+                console.warn('图片加载超时:', q.media);
+                img.onerror(); // 触发错误处理
+            }
+        }, 5000);
     } else {
         // 非图片题移除特殊类名
         optionsContainerEl.classList.remove('image-question-options');
@@ -594,29 +514,6 @@ function endGame() {
 
 // Leaderboard Logic (Global Online Rank)
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyC95b6666666666666666666666666666",
-    authDomain: "jay-quiz-12345.firebaseapp.com",
-    databaseURL: "https://jay-quiz-12345-default-rtdb.firebaseio.com",
-    projectId: "jay-quiz-12345",
-    storageBucket: "jay-quiz-12345.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdef1234567890abcdef"
-};
-
-// Initialize Firebase
-let firebaseApp, database;
-try {
-    firebaseApp = firebase.initializeApp(firebaseConfig);
-    database = firebaseApp.database();
-    console.log("Firebase initialized successfully!");
-} catch (error) {
-    console.error("Firebase initialization failed:", error);
-    // Fallback to localStorage if Firebase fails
-    console.log("Falling back to localStorage for leaderboard storage.");
-}
-
 // Global leaderboard key in localStorage (fallback)
 const GLOBAL_LEADERBOARD_KEY = 'jayQuizGlobalLeaderboard';
 
@@ -633,41 +530,36 @@ function getGlobalLeaderboard() {
     return JSON.parse(localStorage.getItem(GLOBAL_LEADERBOARD_KEY) || '[]');
 }
 
-// Get leaderboard from Firebase
-async function fetchLeaderboardFromFirebase() {
+// Fetch leaderboard from Vercel API
+async function fetchLeaderboardFromAPI() {
     try {
-        const snapshot = await database.ref('leaderboard').orderByChild('score').limitToLast(100).once('value');
-        const leaderboard = [];
-        snapshot.forEach(childSnapshot => {
-            const childData = childSnapshot.val();
-            leaderboard.push({
-                id: childSnapshot.key,
-                ...childData
-            });
-        });
-        // Sort by score descending
-        return leaderboard.sort((a, b) => b.score - a.score);
+        const response = await fetch('/api/leaderboard');
+        if (!response.ok) throw new Error('Network response was not ok');
+        return await response.json();
     } catch (error) {
-        console.error("Error fetching leaderboard from Firebase:", error);
+        console.error("Error fetching leaderboard from API:", error);
         return [];
     }
 }
 
-// Submit score to Firebase
-async function submitScoreToFirebase(name, score, level) {
+// Submit score to Vercel API
+async function submitScoreToAPI(name, score) {
     try {
-        await database.ref('leaderboard').push({
-            name: name,
-            score: score,
-            level: level,
-            date: new Date().toISOString()
+        const response = await fetch('/api/leaderboard', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, score }),
         });
+        if (!response.ok) throw new Error('Network response was not ok');
         return true;
     } catch (error) {
-        console.error("Error submitting score to Firebase:", error);
+        console.error("Error submitting score to API:", error);
         return false;
     }
 }
+
 
 // Calculate fan level based on score
 function calculateFanLevel(score) {
@@ -706,17 +598,15 @@ async function submitScore() {
         level: level
     };
     
-    // Try to submit score to Firebase first
-    if (database) {
-        const success = await submitScoreToFirebase(nickname, score, level);
-        if (success) {
-            showPage('leaderboard');
-            renderLeaderboard();
-            return;
-        }
+    // Try to submit score to API first
+    const success = await submitScoreToAPI(nickname, score);
+    if (success) {
+        showPage('leaderboard');
+        renderLeaderboard();
+        return;
     }
     
-    // Fallback to localStorage if Firebase fails
+    // Fallback to localStorage if API fails
     console.log("Using localStorage as fallback for leaderboard.");
     let leaderboard = getGlobalLeaderboard();
     
@@ -751,16 +641,14 @@ async function renderLeaderboard() {
     listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">加载前10名排名榜数据中...</div>';
     
     let leaderboard = [];
-    let isFirebase = false;
+    let isApi = false;
     
-    // Try to fetch data from Firebase first
-    if (database) {
-        leaderboard = await fetchLeaderboardFromFirebase();
-        isFirebase = leaderboard.length > 0;
-    }
+    // Try to fetch data from API first
+    leaderboard = await fetchLeaderboardFromAPI();
+    isApi = leaderboard.length > 0;
     
-    // Fallback to localStorage if Firebase fails or returns no data
-    if (!isFirebase) {
+    // Fallback to localStorage if API fails or returns no data
+    if (!isApi) {
         console.log("Using localStorage as fallback for leaderboard display.");
         leaderboard = getGlobalLeaderboard();
         // Sort by score descending

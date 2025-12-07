@@ -1175,9 +1175,9 @@ const questionBank = [
         type: 'text',
         difficulty: 'easy',
         question: "“转身离开，分手说不出来”这句话出自哪首歌？",
-        options: ["开不了口", "简单爱", "安静", "星晴"],
-        answer: 0,
-        explanation: "这句歌词出自《开不了口》。",
+        options: ["开不了口", "珊瑚海", "安静", "星晴"],
+        answer: 1,
+        explanation: "这句歌词出自《珊瑚海》。",
         media: null
     },
     {

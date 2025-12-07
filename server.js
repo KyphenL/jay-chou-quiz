@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { kv } = require('@vercel/kv');
 
 const app = express();
 const PORT = 3000;
@@ -10,19 +11,42 @@ app.use(cors());
 // Parse JSON request bodies
 app.use(express.json());
 
-// Simple in-memory leaderboard storage
-let leaderboard = [];
+// In-memory fallback (only used if KV is not configured)
+let localLeaderboard = [];
 
 // API endpoint to get top 10 leaderboard
-app.get('/api/leaderboard', (req, res) => {
-    // Sort by score descending
-    const sortedLeaderboard = [...leaderboard].sort((a, b) => b.score - a.score);
-    // Return top 10
-    res.json(sortedLeaderboard.slice(0, 10));
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        // Check if Vercel KV is configured
+        if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+            // Get top 10 scores (0 to 9) in descending order
+            // zrange returns an array of members (strings)
+            const result = await kv.zrange('leaderboard', 0, 9, { rev: true });
+            
+            // Parse the JSON strings back to objects
+            const leaderboard = result.map(item => {
+                if (typeof item === 'string') {
+                    return JSON.parse(item);
+                }
+                return item;
+            });
+            
+            return res.json(leaderboard);
+        } else {
+            console.warn('Vercel KV not configured, using in-memory fallback');
+            const sortedLeaderboard = [...localLeaderboard].sort((a, b) => b.score - a.score);
+            return res.json(sortedLeaderboard.slice(0, 10));
+        }
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        // Fallback to empty or local
+        const sortedLeaderboard = [...localLeaderboard].sort((a, b) => b.score - a.score);
+        return res.json(sortedLeaderboard.slice(0, 10));
+    }
 });
 
 // API endpoint to submit a new score
-app.post('/api/leaderboard', (req, res) => {
+app.post('/api/leaderboard', async (req, res) => {
     const { name, score } = req.body;
     
     // Validate input
@@ -51,13 +75,35 @@ app.post('/api/leaderboard', (req, res) => {
         name,
         score,
         level,
-        timestamp: new Date().toISOString()
+        date: new Date().toISOString()
     };
     
-    // Add to leaderboard
-    leaderboard.push(newEntry);
-    
-    res.status(201).json({ message: 'Score submitted successfully', entry: newEntry });
+    try {
+        if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+            // Add to Vercel KV
+            // Member is the JSON string of the entry
+            // Score is the actual game score for sorting
+            await kv.zadd('leaderboard', { score: score, member: JSON.stringify(newEntry) });
+            
+            // Optional: Limit leaderboard size to top 100 to save space
+            // Keep ranks 0-99 (top 100), remove the rest
+            // zremrangebyrank removes by index (0-based)
+            // But we want to keep the top scores (highest scores).
+            // ZSET is sorted low to high by default.
+            // If we want to keep top 100 highest scores, we keep the last 100 elements.
+            // Actually, simpler is just to let it grow for now or trim it carefully.
+            // Let's not complicate it with trimming yet unless necessary.
+        } else {
+            localLeaderboard.push(newEntry);
+        }
+        
+        res.status(201).json({ message: 'Score submitted successfully', entry: newEntry });
+    } catch (error) {
+        console.error('Error submitting score:', error);
+        // Fallback to local
+        localLeaderboard.push(newEntry);
+        res.status(201).json({ message: 'Score submitted locally (persistence failed)', entry: newEntry });
+    }
 });
 
 // Serve static files from the current directory
@@ -73,4 +119,4 @@ if (require.main === module) {
 module.exports = app;
 
 // Initialize with empty leaderboard
-leaderboard = [];
+localLeaderboard = [];
